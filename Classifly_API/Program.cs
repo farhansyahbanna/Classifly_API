@@ -3,13 +3,52 @@ using Classifly_API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Classifly API", Version = "v1" });
 
+    // Konfigurasi JWT di Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+
+    //var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    //c.IncludeXmlComments(xmlPath);
+});
 
 builder.Services.AddDbContext<ClassiflyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -18,8 +57,10 @@ builder.Services.AddDbContext<ClassiflyDbContext>(options =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ItemService>();
 builder.Services.AddScoped<BorrowService>();
+builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DamageReportService>();
 builder.Services.AddScoped<NotificationService>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -68,8 +109,27 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+
+//Console.WriteLine("Enter password to hash:");
+//var password = Console.ReadLine();
+
+//CreatePasswordHash(password, out byte[] hash, out byte[] salt);
+
+//Console.WriteLine($"PasswordHash: {Convert.ToBase64String(hash)}");
+//Console.WriteLine($"PasswordSalt: {Convert.ToBase64String(salt)}");
+
+//static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+//{
+//    using var hmac = new HMACSHA512();
+//    passwordSalt = hmac.Key;
+//    passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+//}
 
 app.Run();

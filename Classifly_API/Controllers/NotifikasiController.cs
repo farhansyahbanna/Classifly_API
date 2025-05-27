@@ -7,11 +7,11 @@ namespace Classifly_API.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class NotificationController : ControllerBase
+    public class NotifikasiController : ControllerBase
     {
         private readonly NotificationService _notificationService;
 
-        public NotificationController(NotificationService notificationService)
+        public NotifikasiController(NotificationService notificationService)
         {
             _notificationService = notificationService;
         }

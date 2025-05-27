@@ -3,18 +3,19 @@ using Classifly_API.DTOs.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Classifly_API.Services;
+using System.Security.Claims;
 
 namespace Classifly_API.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class BorrowController : ControllerBase
+    public class PeminjamanController : ControllerBase
     {
         private readonly BorrowService _borrowService;
         private readonly NotificationService _notificationService;
 
-        public BorrowController(BorrowService borrowService, NotificationService notificationService)
+        public PeminjamanController(BorrowService borrowService, NotificationService notificationService)
         {
             _borrowService = borrowService;
             _notificationService = notificationService;
@@ -23,26 +24,28 @@ namespace Classifly_API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBorrowRequest([FromBody] BorrowRequestCreateRequest request)
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
-
-            var borrowRequest = new BorrowRequest
-            {
-                UserId = userId,
-                ItemId = request.ItemId,
-                Quantity = request.Quantity,
-                BorrowDate = request.BorrowDate,
-                ReturnDate = request.ReturnDate,
-                Location = request.Location
-            };
-
             try
             {
-                var createdRequest = await _borrowService.CreateBorrowRequest(borrowRequest);
-                return Ok(createdRequest);
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var createdRequest = await _borrowService.CreateBorrowRequest(request, userId);
+
+                return Ok(new
+                {
+                    Message = "Borrow request created successfully",
+                    RequestId = createdRequest.Id,
+                    Items = createdRequest.BorrowItems.Select(bi => new {
+                        bi.ItemId,
+                        bi.Quantity
+                    })
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    Message = "Failed to create borrow request",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -54,26 +57,36 @@ namespace Classifly_API.Controllers
             {
                 var updatedRequest = await _borrowService.UpdateBorrowStatus(id, request.Status, request.AdminMessage);
 
-                // Send notification to user
-                await _notificationService.CreateNotification(new Notification
+                return Ok(new
                 {
-                    UserId = updatedRequest.UserId,
-                    Title = "Update Status Peminjaman",
-                    Message = $"Peminjaman Anda untuk {updatedRequest.Item.Name} telah {request.Status}. Pesan admin: {request.AdminMessage}"
+                    Message = $"Borrow request {request.Status.ToLower()} successfully",
+                    RequestId = updatedRequest.Id,
+                    Status = updatedRequest.Status
                 });
-
-                return Ok(updatedRequest);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    Message = "Failed to update borrow status",
+                    Error = ex.Message
+                });
             }
         }
 
         [HttpGet("user")]
         public async Task<IActionResult> GetUserBorrowRequests()
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            {
+                return BadRequest(new
+                {
+                    Message = "Invalid user ID in claims"
+                });
+            }
+
             var requests = await _borrowService.GetBorrowRequestsByUser(userId);
             return Ok(requests);
         }

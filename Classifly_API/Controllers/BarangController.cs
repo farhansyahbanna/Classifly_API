@@ -9,11 +9,11 @@ namespace Classifly_API.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class ItemController : ControllerBase
+    public class BarangController : ControllerBase
     {
         private readonly ItemService _itemService;
 
-        public ItemController(ItemService itemService)
+        public BarangController(ItemService itemService)
         {
             _itemService = itemService;
         }
@@ -37,7 +37,7 @@ namespace Classifly_API.Controllers
                     Name = request.Name,
                     Description = request.Description,
                     Quantity = request.Quantity,
-                    Category = request.Category,
+                    CategoryId = request.CategoryId,
                     ImageUrl = imageUrl
                 };
 
@@ -83,7 +83,7 @@ namespace Classifly_API.Controllers
                     Name = request.Name,
                     Description = request.Description,
                     Quantity = request.Quantity,
-                    Category = request.Category,
+                    CategoryId = request.CategoryId,
                     ImageUrl = imageUrl ?? request.ExistingImageUrl
                 };
 
@@ -113,8 +113,7 @@ namespace Classifly_API.Controllers
 
         private async Task<string> SaveFile(IFormFile file)
         {
-            // Implement file saving logic (e.g., save to wwwroot or cloud storage)
-            // Return the URL/path to the saved file
+            
             return $"uploads/{Guid.NewGuid()}_{file.FileName}";
         }
     }

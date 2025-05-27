@@ -16,27 +16,27 @@ namespace Classifly_API.Controllers
             _authService = authService;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(UserRegisterRequest request)
-        {
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                Role = request.Role,
-                FullName = request.FullName
-            };
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register(UserRegisterRequest request)
+        //{
+        //    var user = new User
+        //    {
+        //        Username = request.Username,
+        //        Email = request.Email,
+        //        Role = request.Role,
+        //        FullName = request.FullName
+        //    };
 
-            try
-            {
-                var createdUser = await _authService.Register(user, request.Password);
-                return Ok(createdUser);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //    try
+        //    {
+        //        var createdUser = await _authService.Register(user, request.Password);
+        //        return Ok(createdUser);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginRequest request)

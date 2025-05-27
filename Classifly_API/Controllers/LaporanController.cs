@@ -9,12 +9,12 @@ namespace Classifly_API.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class DamageReportController : ControllerBase
+    public class LaporanController : ControllerBase
     {
         private readonly DamageReportService _damageReportService;
         private readonly NotificationService _notificationService;
 
-        public DamageReportController(DamageReportService damageReportService, NotificationService notificationService)
+        public LaporanController(DamageReportService damageReportService, NotificationService notificationService)
         {
             _damageReportService = damageReportService;
             _notificationService = notificationService;

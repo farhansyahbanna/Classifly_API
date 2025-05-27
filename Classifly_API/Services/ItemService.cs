@@ -16,20 +16,56 @@ namespace Classifly_API.Services
 
         public async Task<Item> CreateItem(Item item)
         {
+            var categoryExists = await _context.Categories
+                .AnyAsync(c => c.Id == item.CategoryId);
+
+            if (!categoryExists)
+                throw new Exception("Category does not exist");
+
             item.CreatedAt = DateTime.UtcNow;
             _context.Items.Add(item);
             await _context.SaveChangesAsync();
             return item;
         }
 
-        public async Task<IEnumerable<Item>> GetAllItems()
+        public async Task<IEnumerable<Item>> GetItemsByCategory(int categoryId)
         {
-            return await _context.Items.ToListAsync();
+            return await _context.Items
+                .Where(i => i.CategoryId == categoryId)
+                .ToListAsync();
         }
 
-        public async Task<Item> GetItemById(int id)
+        public async Task<IEnumerable<ItemResponse>> GetAllItems()
         {
-            return await _context.Items.FindAsync(id);
+            return await _context.Items
+             .Include(i => i.Category) // Include Category untuk eager loading
+             .Select(i => new ItemResponse
+             {
+                 Id = i.Id,
+                 Name = i.Name,
+                 Description = i.Description,
+                 Quantity = i.Quantity,
+                 CategoryName = i.Category.Name, // Akses nama kategori
+                 ImageUrl = i.ImageUrl
+             })
+             .ToListAsync();
+        }
+
+        public async Task<ItemResponse> GetItemById(int id)
+        {
+            return await _context.Items
+              .Include(i => i.Category)
+              .Where(i => i.Id == id) // Fixed: Replaced 'Contains' with '=='
+              .Select(i => new ItemResponse
+              {
+                  Id = i.Id,
+                  Name = i.Name,
+                  Description = i.Description,
+                  Quantity = i.Quantity,
+                  CategoryName = i.Category.Name, // Access category name
+                  ImageUrl = i.ImageUrl
+              })
+              .FirstOrDefaultAsync(); // Fixed: Changed ToListAsync to FirstOrDefaultAsync for single item retrieval
         }
 
         public async Task<Item> UpdateItem(Item item)
@@ -62,17 +98,18 @@ namespace Classifly_API.Services
         public async Task<IEnumerable<ItemResponse>> SearchItems(string searchTerm)
         {
             return await _context.Items
-                .Where(i => i.Name.Contains(searchTerm) || i.Description.Contains(searchTerm))
-                .Select(i => new ItemResponse
-                {
-                    Id = i.Id,
-                    Name = i.Name,
-                    Description = i.Description,
-                    Quantity = i.Quantity,
-                    Category = i.Category,
-                    ImageUrl = i.ImageUrl
-                })
-                .ToListAsync();
+             .Include(i => i.Category) // Include Category untuk eager loading
+             .Where(i => i.Name.Contains(searchTerm) || i.Description.Contains(searchTerm))
+             .Select(i => new ItemResponse
+             {
+                 Id = i.Id,
+                 Name = i.Name,
+                 Description = i.Description,
+                 Quantity = i.Quantity,
+                 CategoryName = i.Category.Name, // Akses nama kategori
+                 ImageUrl = i.ImageUrl
+             })
+             .ToListAsync();
         }
     }
 }

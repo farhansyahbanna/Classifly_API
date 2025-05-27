@@ -3,6 +3,7 @@ using System;
 using Classifly_API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Classifly_API.Migrations
 {
     [DbContext(typeof(ClassiflyDbContext))]
-    partial class ClassiflyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250527131105_MakeAdminMessageNullable")]
+    partial class MakeAdminMessageNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +31,6 @@ namespace Classifly_API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("ItemId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
@@ -57,23 +57,20 @@ namespace Classifly_API.Migrations
                     b.Property<DateTime>("BorrowDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("ItemId")
+                    b.Property<int>("ItemId")
                         .HasColumnType("integer");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("double precision");
 
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("double precision");
 
                     b.Property<DateTime>("ReturnDate")
                         .HasColumnType("timestamp with time zone");
@@ -304,7 +301,9 @@ namespace Classifly_API.Migrations
                 {
                     b.HasOne("Classifly_API.Models.Item", null)
                         .WithMany("BorrowRequests")
-                        .HasForeignKey("ItemId");
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Classifly_API.Models.User", "User")
                         .WithMany("BorrowRequests")

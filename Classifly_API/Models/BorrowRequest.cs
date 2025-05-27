@@ -4,19 +4,19 @@
     public class BorrowRequest
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
-        public int ItemId { get; set; }
-        public int Quantity { get; set; }
         public DateTime BorrowDate { get; set; }
         public DateTime ReturnDate { get; set; }
-        public string Location { get; set; }
         public string Status { get; set; } = "Pending";
-        public string AdminMessage { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public string? AdminMessage { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties
-        public User User { get; set; }
-        public Item Item { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; } = null!;
+
+        public ICollection<BorrowItem> BorrowItems { get; set; } = new List<BorrowItem>();
     }
     
 }
