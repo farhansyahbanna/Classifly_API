@@ -16,6 +16,10 @@ namespace Classifly_API.Services
 
         public async Task<Notification> CreateNotification(Notification notification)
         {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == notification.UserId);
+            if (!userExists)
+                throw new Exception($"User with ID {notification.UserId} not found.");
+
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
             return notification;

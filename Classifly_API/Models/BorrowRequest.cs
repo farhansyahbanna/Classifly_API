@@ -17,6 +17,9 @@
         public User User { get; set; } = null!;
 
         public ICollection<BorrowItem> BorrowItems { get; set; } = new List<BorrowItem>();
+
+        public ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
+
     }
-    
+
 }

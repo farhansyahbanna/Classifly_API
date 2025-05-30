@@ -24,13 +24,13 @@ namespace Classifly_API.Services
                 .ToListAsync();
 
             if (itemsFromDb.Count != itemIds.Count)
-                throw new Exception("One or more items not found.");
+                throw new Exception("Barang Tidak Ditemukan");
 
             // Buat objek BorrowRequest
             var borrowRequest = new BorrowRequest
             {
                 BorrowDate = request.BorrowDate,
-                ReturnDate = request.ReturnDate,
+                ReturnDate = DateTime.UtcNow.AddDays(7), // Set default return date 7 days from now
                 Location = request.Location,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
@@ -46,7 +46,7 @@ namespace Classifly_API.Services
 
                 // Validasi stok
                 if (item.Quantity > itemFromDb.Quantity)
-                    throw new Exception($"Not enough stock for item ID {item.ItemId}");
+                    throw new Exception($"Tidak Cukup Stock untuk ID Barang {item.ItemId}");
 
                 // Kurangi stok
                 //itemFromDb.Quantity -= item.Quantity;
@@ -73,7 +73,7 @@ namespace Classifly_API.Services
                 .FirstOrDefaultAsync(br => br.Id == id);
 
             if (borrowRequest == null)
-                throw new Exception("Borrow request not found");
+                throw new Exception("Peminjaman Barang Tidak Ditemukan");
 
             borrowRequest.Status = status;
             borrowRequest.AdminMessage = adminMessage;
@@ -84,8 +84,8 @@ namespace Classifly_API.Services
                 foreach (var borrowItem in borrowRequest.BorrowItems)
                 {
                     var item = await _context.Items.FindAsync(borrowItem.ItemId);
-                    if (item == null) // Add null check to avoid dereferencing a null reference
-                        throw new Exception($"Item with ID {borrowItem.ItemId} not found");
+                    if (item == null) 
+                        throw new Exception($"Barang dengan ID {borrowItem.ItemId} Tidak Ditemukan");
 
                     if (status == "Approved")
                     {
@@ -115,14 +115,14 @@ namespace Classifly_API.Services
             {
                 Id = br.Id,
                 BorrowDate = br.BorrowDate,
-                ReturnDate = br.ReturnDate,
                 Status = br.Status,
+                AdminMessage = br.AdminMessage,
                 Location = br.Location,
                 Latitude = br.Latitude,
                 Longitude = br.Longitude,
                 UserId = br.User.Id,
-                UserName = br.User.Username, // Example
-                BorrowItems = br.BorrowItems.Select(bi => new BorrowItemDto
+                UserName = br.User.Username, 
+                BorrowItems = br.BorrowItems.Select(bi => new BorrowItemDTO
                 {
                     ItemId = bi.Item.Id,
                     ItemName = bi.Item.Name,
@@ -143,14 +143,14 @@ namespace Classifly_API.Services
                 {
                     Id = br.Id,
                     BorrowDate = br.BorrowDate,
-                    ReturnDate = br.ReturnDate,
                     Status = br.Status,
+                    AdminMessage = br.AdminMessage,
                     Location = br.Location,
                     Latitude = br.Latitude,
                     Longitude = br.Longitude,
                     UserId = br.User.Id,
                     UserName = br.User.Username, // Example
-                    BorrowItems = br.BorrowItems.Select(bi => new BorrowItemDto
+                    BorrowItems = br.BorrowItems.Select(bi => new BorrowItemDTO
                     {
                         ItemId = bi.Item.Id,
                         ItemName = bi.Item.Name,

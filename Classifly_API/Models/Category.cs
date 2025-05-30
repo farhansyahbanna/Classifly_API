@@ -9,7 +9,9 @@ namespace Classifly_API.Models
         //public string Description { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        
+        public bool IsDeleted { get; set; } = false;
+
+
         public ICollection<Item> Items { get; set; }
     }
 }

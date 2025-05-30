@@ -3,6 +3,7 @@ using Classifly_API.Models;
 using Classifly_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Classifly_API.Controllers
 {
@@ -13,32 +14,38 @@ namespace Classifly_API.Controllers
     {
         private readonly DamageReportService _damageReportService;
         private readonly NotificationService _notificationService;
+        private readonly IPhotoService _photoService;
 
-        public LaporanController(DamageReportService damageReportService, NotificationService notificationService)
+        public LaporanController(DamageReportService damageReportService, NotificationService notificationService, IPhotoService photoService)
         {
             _damageReportService = damageReportService;
             _notificationService = notificationService;
+            _photoService = photoService;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateDamageReport([FromForm] DamageReportCreateRequest request)
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
 
             // Handle file upload
             string imageUrl = null;
             if (request.ImageFile != null && request.ImageFile.Length > 0)
             {
-                imageUrl = await SaveFile(request.ImageFile);
+                imageUrl = await _photoService.UploadImageAsync(request.ImageFile);
             }
 
             var damageReport = new DamageReport
             {
                 UserId = userId,
-                ItemId = request.ItemId,
+                BorrowRequestId = request.BorrowRequestId,
                 Description = request.Description,
                 ImageUrl = imageUrl,
-                Location = request.Location
+                Location = request.Location,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+
             };
 
             try
@@ -64,8 +71,8 @@ namespace Classifly_API.Controllers
                 await _notificationService.CreateNotification(new Notification
                 {
                     UserId = updatedReport.UserId,
-                    Title = "Update Status Laporan Kerusakan",
-                    Message = $"Laporan kerusakan Anda untuk {updatedReport.Item.Name} telah {request.Status}. Pesan admin: {request.AdminMessage}"
+                    Title = "Laporan Kerusakan",
+                    Message = $"Laporan kerusakan Anda telah diterima. Pesan admin: {request.AdminMessage}"
                 });
 
                 return Ok(updatedReport);
@@ -79,7 +86,7 @@ namespace Classifly_API.Controllers
         [HttpGet("user")]
         public async Task<IActionResult> GetUserDamageReports()
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var reports = await _damageReportService.GetDamageReportsByUser(userId);
             return Ok(reports);
         }
@@ -92,10 +99,6 @@ namespace Classifly_API.Controllers
             return Ok(reports);
         }
 
-        private async Task<string> SaveFile(IFormFile file)
-        {
-            // Implement file saving logic
-            return $"damage-reports/{Guid.NewGuid()}_{file.FileName}";
-        }
+       
     }
 }

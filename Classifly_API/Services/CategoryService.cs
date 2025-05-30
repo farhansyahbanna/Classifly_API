@@ -35,6 +35,7 @@ namespace Classifly_API.Services
         public async Task<IEnumerable<CategoryResponse>> GetAllCategories()
         {
             return await _context.Categories
+                .Where(c => !c.IsDeleted)
                 .Select(c => MapToDto(c))
                 .ToListAsync();
         }
@@ -50,13 +51,13 @@ namespace Classifly_API.Services
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (category == null)
-                throw new Exception("Category not found");
+            if (category == null || category.IsDeleted)
+                throw new Exception("Kategori Tidak Ditemukan");
 
             if (category.Items.Any())
                 throw new Exception("Cannot delete category with existing items");
 
-            _context.Categories.Remove(category);
+            category.IsDeleted = true;
             await _context.SaveChangesAsync();
         }
 

@@ -31,7 +31,7 @@ namespace Classifly_API.Controllers
 
                 return Ok(new
                 {
-                    Message = "Borrow request created successfully",
+                    Message = "Peminjama Barang Berhasil Dibuat ",
                     RequestId = createdRequest.Id,
                     Items = createdRequest.BorrowItems.Select(bi => new {
                         bi.ItemId,
@@ -43,7 +43,7 @@ namespace Classifly_API.Controllers
             {
                 return BadRequest(new
                 {
-                    Message = "Failed to create borrow request",
+                    Message = "Gagal Meminjam Barang",
                     Error = ex.Message
                 });
             }
@@ -57,9 +57,20 @@ namespace Classifly_API.Controllers
             {
                 var updatedRequest = await _borrowService.UpdateBorrowStatus(id, request.Status, request.AdminMessage);
 
+                // Kirim notifikasi jika disetujui
+                if (request.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _notificationService.CreateNotification(new Notification
+                    {
+                        UserId = updatedRequest.UserId,
+                        Title = "Permintaan Peminjaman Disetujui",
+                        Message = $"Permintaan peminjaman Anda dengan ID {updatedRequest.Id} telah disetujui oleh admin."
+                    });
+                }
+
                 return Ok(new
                 {
-                    Message = $"Borrow request {request.Status.ToLower()} successfully",
+                    Message = $"Peminjaman Barang : {request.Status.ToLower()} !",
                     RequestId = updatedRequest.Id,
                     Status = updatedRequest.Status
                 });
@@ -68,11 +79,12 @@ namespace Classifly_API.Controllers
             {
                 return BadRequest(new
                 {
-                    Message = "Failed to update borrow status",
+                    Message = "Gagal Mengupdate Status Peminjaman",
                     Error = ex.Message
                 });
             }
         }
+
 
         [HttpGet("user")]
         public async Task<IActionResult> GetUserBorrowRequests()

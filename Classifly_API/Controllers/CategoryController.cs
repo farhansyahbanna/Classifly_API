@@ -58,11 +58,11 @@ namespace Classifly_API.Controllers
             try
             {
                 await _categoryService.DeleteCategory(id);
-                return NoContent();
+                return Ok(new { Message = "Kategori berhasil dihapus (soft delete)." });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { ex.Message });
+                return BadRequest(new { Message = "Gagal menghapus Kategori", Error = ex.Message });
             }
         }
 

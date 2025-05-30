@@ -6,6 +6,7 @@
         public DateTime BorrowDate { get; set; }
         public DateTime ReturnDate { get; set; }
         public string Status { get; set; }
+        public string? AdminMessage { get; set; }
         public string Location { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
@@ -15,7 +16,7 @@
         public string UserName { get; set; } // Example of flattened data
 
         // Include BorrowItems
-        public List<BorrowItemDto> BorrowItems { get; set; }
+        public List<BorrowItemDTO> BorrowItems { get; set; }
     }
 
     public class BorrowItemDTO

@@ -61,10 +61,17 @@ namespace Classifly_API.Data
                 .HasForeignKey(dr => dr.UserId);
 
             // Relasi antara DamageReport dan Item
+            //modelBuilder.Entity<DamageReport>()
+            //    .HasOne(dr => dr.Item)
+            //    .WithMany(i => i.DamageReports)
+            //    .HasForeignKey(dr => dr.ItemId);
+
+            // Relasi antara DamageReport dan BorrowRequest
             modelBuilder.Entity<DamageReport>()
-                .HasOne(dr => dr.Item)
-                .WithMany(i => i.DamageReports)
-                .HasForeignKey(dr => dr.ItemId);
+                .HasOne(dr => dr.BorrowRequest)
+                .WithMany(br => br.DamageReports)
+                .HasForeignKey(dr => dr.BorrowRequestId);
+
 
             // Relasi antara Notification dan User
             modelBuilder.Entity<Notification>()

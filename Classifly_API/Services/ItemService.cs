@@ -38,7 +38,8 @@ namespace Classifly_API.Services
         public async Task<IEnumerable<ItemResponse>> GetAllItems()
         {
             return await _context.Items
-             .Include(i => i.Category) // Include Category untuk eager loading
+             .Include(i => i.Category)
+             .Where(i => !i.IsDeleted)
              .Select(i => new ItemResponse
              {
                  Id = i.Id,
@@ -55,7 +56,8 @@ namespace Classifly_API.Services
         {
             return await _context.Items
               .Include(i => i.Category)
-              .Where(i => i.Id == id) // Fixed: Replaced 'Contains' with '=='
+              .Where(i => i.Id == id)
+              .Where(i => !i.IsDeleted)
               .Select(i => new ItemResponse
               {
                   Id = i.Id,
@@ -88,11 +90,11 @@ namespace Classifly_API.Services
         public async Task DeleteItem(int id)
         {
             var item = await _context.Items.FindAsync(id);
-            if (item == null)
-                throw new Exception("Item not found");
-
-            _context.Items.Remove(item);
+            if (item == null || item.IsDeleted)
+                throw new Exception("Barang Tidak Ditemukan ");
+            item.IsDeleted = true;
             await _context.SaveChangesAsync();
+            
         }
 
         public async Task<IEnumerable<ItemResponse>> SearchItems(string searchTerm)

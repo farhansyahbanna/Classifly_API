@@ -12,10 +12,12 @@ namespace Classifly_API.Controllers
     public class BarangController : ControllerBase
     {
         private readonly ItemService _itemService;
+        private readonly IPhotoService _photoService;
 
-        public BarangController(ItemService itemService)
+        public BarangController(ItemService itemService, IPhotoService photoService)
         {
             _itemService = itemService;
+            _photoService = photoService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -29,7 +31,7 @@ namespace Classifly_API.Controllers
                 if (request.ImageFile != null && request.ImageFile.Length > 0)
                 {
                     // Save file and get URL (implementation depends on your storage solution)
-                    imageUrl = await SaveFile(request.ImageFile);
+                    imageUrl = await _photoService.UploadImageAsync(request.ImageFile);
                 }
 
                 var item = new Item
@@ -74,7 +76,7 @@ namespace Classifly_API.Controllers
                 string imageUrl = null;
                 if (request.ImageFile != null && request.ImageFile.Length > 0)
                 {
-                    imageUrl = await SaveFile(request.ImageFile);
+                    imageUrl = await _photoService.UploadImageAsync(request.ImageFile);
                 }
 
                 var item = new Item
@@ -102,19 +104,16 @@ namespace Classifly_API.Controllers
         {
             try
             {
-                await _itemService.DeleteItem(id);
-                return NoContent();
+                await _itemService.DeleteItem(id); // Remove assignment since DeleteItem returns void
+                return Ok(new { Message = "Item berhasil dihapus (soft delete)." });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { Message = "Gagal menghapus item", Error = ex.Message });
             }
         }
 
-        private async Task<string> SaveFile(IFormFile file)
-        {
-            
-            return $"uploads/{Guid.NewGuid()}_{file.FileName}";
-        }
+
+      
     }
 }

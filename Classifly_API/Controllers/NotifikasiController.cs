@@ -1,6 +1,7 @@
 ﻿using Classifly_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Classifly_API.Controllers
 {
@@ -19,7 +20,7 @@ namespace Classifly_API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUserNotifications()
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             var notifications = await _notificationService.GetUserNotifications(userId);
             return Ok(notifications);
         }
@@ -27,9 +28,9 @@ namespace Classifly_API.Controllers
         [HttpPut("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            var userId = int.Parse(User.FindFirst("id").Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
             await _notificationService.MarkNotificationAsRead(id, userId);
-            return NoContent();
+            return Ok(new { Message = "Notifikasi Telah Dibaca" });
         }
     }
 }

@@ -1,3 +1,4 @@
+using Classifly_API;
 using Classifly_API.Data;
 using Classifly_API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -60,6 +61,12 @@ builder.Services.AddScoped<BorrowService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DamageReportService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+
+
+//Clodinary configuration
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

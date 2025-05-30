@@ -3,6 +3,7 @@ using System;
 using Classifly_API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Classifly_API.Migrations
 {
     [DbContext(typeof(ClassiflyDbContext))]
-    partial class ClassiflyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250530075604_UpdateDamageReportToBorrowRequest")]
+    partial class UpdateDamageReportToBorrowRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,9 +110,6 @@ namespace Classifly_API.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -137,6 +137,9 @@ namespace Classifly_API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int?>("DamageReportId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -169,6 +172,8 @@ namespace Classifly_API.Migrations
 
                     b.HasIndex("BorrowRequestId");
 
+                    b.HasIndex("DamageReportId");
+
                     b.HasIndex("ItemId");
 
                     b.HasIndex("UserId");
@@ -199,9 +204,6 @@ namespace Classifly_API.Migrations
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -338,6 +340,10 @@ namespace Classifly_API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Classifly_API.Models.DamageReport", null)
+                        .WithMany("DamageReports")
+                        .HasForeignKey("DamageReportId");
+
                     b.HasOne("Classifly_API.Models.Item", null)
                         .WithMany("DamageReports")
                         .HasForeignKey("ItemId");
@@ -385,6 +391,11 @@ namespace Classifly_API.Migrations
             modelBuilder.Entity("Classifly_API.Models.Category", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Classifly_API.Models.DamageReport", b =>
+                {
+                    b.Navigation("DamageReports");
                 });
 
             modelBuilder.Entity("Classifly_API.Models.Item", b =>
