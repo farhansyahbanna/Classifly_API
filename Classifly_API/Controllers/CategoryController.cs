@@ -35,7 +35,7 @@ namespace Classifly_API.Controllers
             }
         }
 
-        [AllowAnonymous]
+
         [HttpGet]
         public async Task<IActionResult> GetAllCategories()
         {
@@ -43,7 +43,7 @@ namespace Classifly_API.Controllers
             return Ok(categories);
         }
 
-        [AllowAnonymous]
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategoryById(int id)
         {

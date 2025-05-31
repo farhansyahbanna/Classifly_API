@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 //var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
 
@@ -79,25 +80,28 @@ builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
 
-
+//JWT Configuration
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+    
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                .GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value)),
+                .GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value ?? "")), 
             ValidateIssuer = false,
             ValidateAudience = false
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User"));
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
+    .AddPolicy("RequireUserRole", policy => policy.RequireRole("User"))
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAssertion(context => true) 
+        .Build());
+
 
 builder.Services.AddCors(options =>
 {
@@ -117,11 +121,11 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
 
 app.UseHttpsRedirection();
 
@@ -157,4 +161,5 @@ app.MapControllers();
 //    db.Database.Migrate();
 //}
 
+app.MapGet("/", () => "Selamat datang di Classifly API! Akses /swagger untuk dokumentasi API.");
 app.Run();

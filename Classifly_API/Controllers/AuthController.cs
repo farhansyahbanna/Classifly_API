@@ -1,6 +1,7 @@
 ﻿using Classifly_API.DTOs.Requests;
 using Classifly_API.Models;
 using Classifly_API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Classifly_API.Controllers
@@ -16,6 +17,7 @@ namespace Classifly_API.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(UserRegisterRequest request)
         {
@@ -38,6 +40,7 @@ namespace Classifly_API.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginRequest request)
         {
