@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Classifly_API/appsettings.json
+/Classifly_API/appsettings.Production.json

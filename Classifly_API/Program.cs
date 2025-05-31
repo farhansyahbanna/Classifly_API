@@ -9,10 +9,17 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
+//var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production";
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add services to the container.
+
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -51,8 +58,12 @@ builder.Services.AddSwaggerGen(c =>
     //c.IncludeXmlComments(xmlPath);
 });
 
+
+
 builder.Services.AddDbContext<ClassiflyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
 
 // Register services
 builder.Services.AddScoped<AuthService>();
@@ -137,6 +148,13 @@ app.MapControllers();
 //    using var hmac = new HMACSHA512();
 //    passwordSalt = hmac.Key;
 //    passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+//}
+
+//if (isProduction)
+//{
+//    using var scope = app.Services.CreateScope();
+//    var db = scope.ServiceProvider.GetRequiredService<ClassiflyDbContext>();
+//    db.Database.Migrate();
 //}
 
 app.Run();
