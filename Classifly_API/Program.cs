@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // Add services to the container.
 
 builder.Configuration
@@ -74,11 +73,17 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DamageReportService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 
 //Clodinary configuration
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
+
+//SendGrid configuration
+builder.Services.Configure<SendGridSettings>(builder.Configuration.GetSection("SendGrid"));
+
+builder.Services.AddTransient<IEmailService, SendGridEmailService>();
 
 //JWT Configuration
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

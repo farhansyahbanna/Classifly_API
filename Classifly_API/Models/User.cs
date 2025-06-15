@@ -9,6 +9,8 @@
         public string Email { get; set; }
         public string Role { get; set; }
         public string FullName { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
         public DateTime CreatedAt { get; set; }
 
         // Navigation properties

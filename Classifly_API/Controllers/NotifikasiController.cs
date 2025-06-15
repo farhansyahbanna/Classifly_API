@@ -32,5 +32,27 @@ namespace Classifly_API.Controllers
             await _notificationService.MarkNotificationAsRead(id, userId);
             return Ok(new { Message = "Notifikasi Telah Dibaca" });
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+   
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Unauthorized();
+            }
+            var userId = int.Parse(userIdString);
+
+          
+            var success = await _notificationService.DeleteNotificationAsync(id, userId);
+
+            if (!success)
+            {
+                
+                return NotFound(new { Message = "Notifikasi tidak ditemukan." });
+            }   
+            return Ok(new { Message = "Notifikasi berhasil dihapus." });
+        }
     }
 }

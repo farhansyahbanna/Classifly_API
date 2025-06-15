@@ -51,6 +51,37 @@ namespace Classifly_API.Controllers
             return category != null ? Ok(category) : NotFound();
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryUpdateRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var updatedCategory = await _categoryService.UpdateCategory(id, request);
+
+                if (updatedCategory == null)
+                {
+                    return NotFound(new { Message = "Kategori tidak ditemukan." });
+                }
+
+                return Ok(updatedCategory);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, new { Message = "Terjadi kesalahan pada server.", Error = ex.Message });
+            }
+        }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)

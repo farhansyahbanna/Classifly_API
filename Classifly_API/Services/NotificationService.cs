@@ -64,5 +64,23 @@ namespace Classifly_API.Services
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> DeleteNotificationAsync(int notificationId, int userId)
+        {
+
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
+
+            if (notification == null)
+            {
+                return false;
+            }
+
+            _context.Notifications.Remove(notification);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

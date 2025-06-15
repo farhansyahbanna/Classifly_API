@@ -28,8 +28,11 @@ namespace Classifly_API.Services
                 throw new Exception("User Tidak ditemukan");
 
             // // Verify Borrow Request is approved
-            if (borrowRequest.Status != "Approved")
+ 
+            if (borrowRequest.Status.ToLower() != "approved")
+            {
                 throw new Exception("Peminjaman Harus Sudah Di Approved");
+            }
 
             // Validate image URL
             if (string.IsNullOrEmpty(damageReport.ImageUrl))
@@ -67,8 +70,8 @@ namespace Classifly_API.Services
                 UserId = damageReport.UserId,
                 UserName = user.FullName, // pastikan `FullName` ada di model User
                 BorrowRequestId = damageReport.BorrowRequestId,
-                BorrowDate = borrowRequest.BorrowDate,
-                ReturnDate = borrowRequest.ReturnDate
+                BorrowDate = borrowRequest.BorrowDate.ToUniversalTime(),
+                ReturnDate = borrowRequest.ReturnDate.ToUniversalTime()
             };
         }
 
@@ -85,7 +88,7 @@ namespace Classifly_API.Services
             damageReport.Status = status;
             damageReport.AdminMessage = adminMessage;
 
-            var validStatuses = new[] { "Pending", "Approved", "Rejected" };
+            var validStatuses = new[] { "Pending", "Resolved", "In Progress" };
             if (!validStatuses.Contains(status))
                 throw new Exception("Invalid status value.");
 
@@ -122,8 +125,8 @@ namespace Classifly_API.Services
                     UserId = dr.UserId,
                     UserName = dr.User.FullName, // pastikan `FullName` ada di model User
                     BorrowRequestId = dr.BorrowRequestId,
-                    BorrowDate = dr.BorrowRequest.BorrowDate,
-                    ReturnDate = dr.BorrowRequest.ReturnDate
+                    BorrowDate = dr.BorrowRequest.BorrowDate.ToUniversalTime(),
+                    ReturnDate = dr.BorrowRequest.ReturnDate.ToUniversalTime()
                 })
                 .ToListAsync();
         }
@@ -148,7 +151,7 @@ namespace Classifly_API.Services
                     UserId = dr.UserId,
                     UserName = dr.User.FullName, // pastikan `FullName` ada di model User
                     BorrowRequestId = dr.BorrowRequestId,
-                    BorrowDate = dr.BorrowRequest.BorrowDate,
+                    BorrowDate = dr.BorrowRequest.BorrowDate.ToUniversalTime(),
                 })
                 .ToListAsync();
         }

@@ -61,6 +61,36 @@ namespace Classifly_API.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Category?> UpdateCategory(int id, CategoryUpdateRequest request)
+        {
+ 
+            var existingCategory = await _context.Categories.FindAsync(id);
+
+            if (existingCategory == null)
+            {
+                return null; 
+            }
+
+
+            var isDuplicate = await _context.Categories
+                .AnyAsync(c => c.Name == request.CategoryName && c.Id != id);
+
+            if (isDuplicate)
+            {
+
+                throw new InvalidOperationException("Nama kategori tersebut sudah digunakan.");
+            }
+
+
+            existingCategory.Name = request.CategoryName;
+  
+            await _context.SaveChangesAsync();
+
+            return existingCategory;
+        }
+
+
+
         private static CategoryResponse MapToDto(Category category)
         {
             return new CategoryResponse

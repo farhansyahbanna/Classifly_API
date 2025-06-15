@@ -29,7 +29,7 @@ namespace Classifly_API.Services
             // Buat objek BorrowRequest
             var borrowRequest = new BorrowRequest
             {
-                BorrowDate = request.BorrowDate,
+                BorrowDate = request.BorrowDate.ToUniversalTime(),
                 ReturnDate = DateTime.UtcNow.AddDays(7), // Set default return date 7 days from now
                 Location = request.Location,
                 Latitude = request.Latitude,
@@ -66,41 +66,93 @@ namespace Classifly_API.Services
 
         public async Task<BorrowRequest> UpdateBorrowStatus(int id, string status, string adminMessage)
         {
-            var borrowRequest = await _context.BorrowRequests
-                .Include(br => br.BorrowItems)
-                    .ThenInclude(bi => bi.Item)
-                .Include(br => br.User)
-                .FirstOrDefaultAsync(br => br.Id == id);
-
-            if (borrowRequest == null)
-                throw new Exception("Peminjaman Barang Tidak Ditemukan");
-
-            borrowRequest.Status = status;
-            borrowRequest.AdminMessage = adminMessage;
-
-            // Update item quantity jika approved/rejected
-            if (status == "Approved" || status == "Rejected")
+            // Gunakan transaksi untuk memastikan semua operasi berhasil atau semua gagal
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
-                foreach (var borrowItem in borrowRequest.BorrowItems)
+                try
                 {
-                    var item = await _context.Items.FindAsync(borrowItem.ItemId);
-                    if (item == null) 
-                        throw new Exception($"Barang dengan ID {borrowItem.ItemId} Tidak Ditemukan");
+          
+                    var borrowRequest = await _context.BorrowRequests
+                        .Include(br => br.BorrowItems)
+                            .ThenInclude(bi => bi.Item) 
+                        .FirstOrDefaultAsync(br => br.Id == id);
 
+                    if (borrowRequest == null)
+                    {
+                        throw new Exception("Peminjaman Barang Tidak Ditemukan");
+                    }
+
+            
+                    var originalStatus = borrowRequest.Status;
+
+         
+                    if (originalStatus == status)
+                    {
+                        borrowRequest.AdminMessage = adminMessage; 
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        return borrowRequest;
+                    }
+
+                    // 3. Terapkan logika berdasarkan PERUBAHAN STATUS
+
+                    // KASUS 1: Peminjaman disetujui (dari Pending/Rejected menjadi Approved)
                     if (status == "Approved")
                     {
-                        item.Quantity -= borrowItem.Quantity;
+                        foreach (var borrowItem in borrowRequest.BorrowItems)
+                        {
+                          
+                            var item = borrowItem.Item;
+                            if (item == null)
+                                throw new Exception($"Data barang untuk ItemId {borrowItem.ItemId} tidak ditemukan.");
+
+
+                            if (item.Quantity < borrowItem.Quantity)
+                            {
+                                throw new Exception($"Stok untuk '{item.Name}' tidak mencukupi.");
+                            }
+
+                
+                            item.Quantity -= borrowItem.Quantity;
+                        }
                     }
-                    else if (status == "Rejected")
+   
+                    else if (originalStatus == "Approved" && (status == "Rejected" || status == "Cancelled"))
                     {
-                        // Kembalikan stok jika ditolak
-                        item.Quantity += borrowItem.Quantity;
+                        foreach (var borrowItem in borrowRequest.BorrowItems)
+                        {
+                            var item = borrowItem.Item;
+                            if (item == null)
+                                throw new Exception($"Data barang untuk ItemId {borrowItem.ItemId} tidak ditemukan.");
+
+ 
+                            item.Quantity += borrowItem.Quantity;
+                        }
                     }
+                    // KASUS 3: Dari Pending ke Rejected, atau perubahan lain yang tidak memengaruhi stok,
+                    // tidak perlu melakukan apa-apa terhadap kuantitas.
+
+
+                    borrowRequest.Status = status;
+                    borrowRequest.AdminMessage = adminMessage;
+
+
+                    await _context.SaveChangesAsync();
+
+
+                    await transaction.CommitAsync();
+
+                    return borrowRequest;
+                }
+                catch (Exception ex)
+                {
+
+                    await transaction.RollbackAsync();
+
+  
+                    throw new Exception($"Gagal memperbarui status: {ex.Message}");
                 }
             }
-
-            await _context.SaveChangesAsync();
-            return borrowRequest;
         }
 
         public async Task<IEnumerable<BorrowRequestDto>> GetBorrowRequestsByUser(int userId)
@@ -114,7 +166,7 @@ namespace Classifly_API.Services
             .Select(br => new BorrowRequestDto
             {
                 Id = br.Id,
-                BorrowDate = br.BorrowDate,
+                BorrowDate = br.BorrowDate.ToUniversalTime(),
                 Status = br.Status,
                 AdminMessage = br.AdminMessage,
                 Location = br.Location,
@@ -142,7 +194,7 @@ namespace Classifly_API.Services
                 .Select(br => new BorrowRequestDto
                 {
                     Id = br.Id,
-                    BorrowDate = br.BorrowDate,
+                    BorrowDate = br.BorrowDate.ToUniversalTime(),
                     Status = br.Status,
                     AdminMessage = br.AdminMessage,
                     Location = br.Location,
